@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION "3.17")
 
 # name of this example project
-project(simple-demo)
+project(augmented-reality-on-webcam)
 
 # set OpenCV_DIR variable equal to the path to the cmake
 # files within the previously installed opencv program
@@ -24,7 +24,7 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 # specify the executable target to be built
-add_executable(simple-demo main.cpp)
+add_executable(augmented-reality-on-webcam main.cpp)
 
 # tell it to link the executable target against OpenCV
-target_link_libraries(simple-demo ${OpenCV_LIBS} )
+target_link_libraries(augmented-reality-on-webcam ${OpenCV_LIBS} )
