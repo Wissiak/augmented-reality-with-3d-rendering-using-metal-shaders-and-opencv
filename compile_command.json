@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/Users/patrick/tools/opencv-4.8.0/simple_demo/build",
+  "command": "/usr/bin/clang++  -isystem /opt/homebrew/Cellar/opencv/4.8.1_1/include/opencv4 -g -std=gnu++14 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk -mmacosx-version-min=13.5 -o CMakeFiles/simple-demo.dir/main.cpp.o -c /Users/patrick/tools/opencv-4.8.0/simple_demo/main.cpp",
+  "file": "/Users/patrick/tools/opencv-4.8.0/simple_demo/main.cpp",
+  "output": "CMakeFiles/simple-demo.dir/main.cpp.o"
+}
+]
