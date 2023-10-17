@@ -9,9 +9,6 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
 
-using std::cout;
-using std::endl;
-
 /*
 https://thecodinginterface.com/blog/opencv-cpp-vscode/
 
@@ -29,21 +26,18 @@ private:
   cv::Mat referenceDescriptors;
   cv::Ptr<cv::SiftFeatureDetector> detector;
   cv::Ptr<cv::BFMatcher> matcher;
-  std::vector<cv::Point2f> corners;
-  bool const showMatches = true;
+  std::vector<cv::Point2f> corners{4};
+  bool const showMatches = false;
 
 public:
   ARWebcam() {
-    detector = cv::SiftFeatureDetector::create(3000, 4, 0.001, 20, 1.5);
+    detector = cv::SiftFeatureDetector::create(1000, 4, 0.001, 20, 1.5);
     detector->detectAndCompute(referenceImage, cv::noArray(),
                                referenceKeypoints, referenceDescriptors);
     matcher = cv::BFMatcher::create(cv::NORM_L2, true);
 
     unsigned height = referenceImage.rows;
     unsigned width = referenceImage.cols;
-    unsigned data[8] = {0,         0,          width - 1, 0,
-                        width - 1, height - 1, 0,         height - 1};
-
     corners.push_back(cv::Point2f(0, 0));
     corners.push_back(cv::Point2f(width - 1, 0));
     corners.push_back(cv::Point2f(width - 1, height - 1));
@@ -55,7 +49,7 @@ public:
     cv::namedWindow("Video Player");
     cv::VideoCapture cap(0);
     if (!cap.isOpened()) {
-      cout << "No video stream detected" << endl;
+      std::cout << "No video stream detected" << std::endl;
       system("pause");
     }
     while (true) {
@@ -95,20 +89,20 @@ public:
                         cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
         cv::imshow("Reliable Matches", matchFrame);
       }
-      if (nInliers > 50) {
+      if (nInliers > 80) {
         std::vector<cv::Point2f> transformedCorners;
         cv::perspectiveTransform(corners, transformedCorners, H);
 
-        for (int i = 0; i < transformedCorners.size(); i++)
-          cv::circle(videoFrame, transformedCorners[i], 10, CV_RGB(100, 0, 0),
-                     -1, 8, 0);
-        // cv::polylines(videoFrame, transformedCorners, true,
-        //               cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
+        for (int i = 0; i < transformedCorners.size(); i++) {
+          cv::line(videoFrame, transformedCorners[i],
+                   transformedCorners[(i + 1) % transformedCorners.size()],
+                   CV_RGB(0, 255, 0), 3, 8, 0);
+        }
       }
       imshow("Video Player", videoFrame);
       char c = (char)cv::waitKey(1);
 
-      // If 'Esc' is entered break the loop
+      // End loop on ESC
       if (c == 27) {
         break;
       }
