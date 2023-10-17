@@ -9,7 +9,7 @@
             "name": "(lldb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/augmented-reality-on-webcam",
+            "program": "${workspaceFolder}/build/augmented_reality_on_webcam",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
