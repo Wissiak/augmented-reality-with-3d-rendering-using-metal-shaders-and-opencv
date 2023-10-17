@@ -13,7 +13,7 @@ set(OpenCV_DIR /opt/homebrew/Cellar/opencv/4.8.1_1/include/opencv4)
 
 # Tell compiler to use C++ 14 features which is needed because
 # Clang version is often behind in the XCode installation
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 # configure the necessary common CMake environment variables
 # needed to include and link the OpenCV program into this
