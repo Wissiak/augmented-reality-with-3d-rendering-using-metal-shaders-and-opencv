@@ -19,7 +19,7 @@ MetalAdder::MetalAdder(MTL::Device *device)
     NS::Error *error = nullptr;
 
     // Load the shader files with a .metal file extension in the project
-    NS::String* filePath = NS::String::string("add.metallib", NS::UTF8StringEncoding);
+    NS::String* filePath = NS::String::string("../add.metallib", NS::UTF8StringEncoding);
     MTL::Library *defaultLibrary = _mDevice->newLibrary(filePath, &error);
 
     assert(defaultLibrary != nullptr);

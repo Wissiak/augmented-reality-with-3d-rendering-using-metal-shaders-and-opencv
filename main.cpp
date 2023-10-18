@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     MTL::Device *device = MTL::CreateSystemDefaultDevice();
     MetalAdder *adder = new MetalAdder(device);
 
-    Model *m = new Model("assets/tutorial.obj", device);
+    Model *m = new Model("../assets/tutorial.obj", device);
 
     // Verify Metal code ---------------------------------------------------------------
     adder->sendComputeCommand(); // This computes the array sum

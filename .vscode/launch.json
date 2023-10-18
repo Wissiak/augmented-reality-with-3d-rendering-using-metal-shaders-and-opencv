@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/build/augmented_reality_on_webcam",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/build",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
