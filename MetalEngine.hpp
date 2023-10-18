@@ -6,6 +6,7 @@
 #include "model.hpp"
 #include <QuartzCore/CAMetalLayer.hpp>
 #include <QuartzCore/CAMetalLayer.h>
+#include "AAPLMathUtilities.h"
 
 #include <iostream>
 
