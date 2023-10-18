@@ -119,12 +119,16 @@ void MetalAdder::verifyResults()
     float *b = (float *)_mBufferB->contents();
     float *result = (float *)_mBufferResult->contents();
 
+    for (int i = 0; i < arrayLength; i++) {
+        std::cout << a[i] << " + " << b[i] << " = " << result[i] << std::endl;
+    } 
+
     for (unsigned long index = 0; index < arrayLength; index++)
     {
         if (result[index] != (a[index] + b[index]))
         {
-            printf("Compute ERROR: index=%lu result=%g vs %g=a+b\n",
-                   index, result[index], a[index] + b[index]);
+            printf("Compute ERROR: index=%lu result=%g vs %g + %g = %g\n",
+                   index, result[index], a[index], b[index], a[index] + b[index]);
             assert(result[index] == (a[index] + b[index]));
         }
     }

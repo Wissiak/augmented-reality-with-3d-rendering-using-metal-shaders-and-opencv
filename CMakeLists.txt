@@ -28,14 +28,20 @@ find_library(APPLE_FWK_FOUNDATION Foundation REQUIRED)
 find_library(APPLE_FWK_QUARTZ_CORE QuartzCore REQUIRED)
 find_library(APPLE_FWK_METAL Metal REQUIRED)
 
-add_library(MetalAdder
-    "MetalAdder.cpp"
+add_library("RendererLib"
+    "mesh.cpp"
+    "TextureArray.cpp"
+    "model.cpp"
 )
+add_library(stb "stb/stb_image.cpp")
 # specify the executable target to be built
-add_executable(augmented_reality_on_webcam MACOSX_BUNDLE
+add_executable(augmented_reality_on_webcam
   main.cpp
-  MetalAdder
-  add.metal)
+  MetalAdder.cpp)
+
+#set_property(TARGET augmented_reality_on_webcam PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
+
+target_link_libraries(augmented_reality_on_webcam "RendererLib")
 
 # tell it to link the executable target against OpenCV
 target_link_libraries(augmented_reality_on_webcam ${OpenCV_LIBS})
@@ -50,10 +56,24 @@ target_link_libraries(augmented_reality_on_webcam
   ${APPLE_FWK_METAL}
 )
 
-target_include_directories(MetalAdder
+include(FetchContent)
+set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/libs CACHE PATH "Missing description." FORCE)
+FetchContent_Declare(assimp
+GIT_REPOSITORY https://github.com/assimp/assimp.git
+GIT_TAG master)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(assimp)
+target_include_directories("RendererLib" PRIVATE libs/assimp-src/include)
+target_link_libraries("RendererLib" assimp)
+
+target_link_libraries("RendererLib" stb)
+target_include_directories("RendererLib"
   SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/metal-cpp
 )
-target_link_libraries(MetalAdder
+target_link_libraries("RendererLib"
   ${APPLE_FWK_FOUNDATION}
   ${APPLE_FWK_QUARTZ_CORE}
   ${APPLE_FWK_METAL}

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 
 #define NS_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
@@ -7,12 +8,16 @@
 #include "Metal/Metal.hpp"
 #include "QuartzCore/QuartzCore.hpp"
 
+#include "model.hpp"
 #include "MetalAdder.hpp"
 
 int main(int argc, char *argv[]) {
+    std::cout << "Current path is " << std::filesystem::current_path() << '\n';
     // Create GPU code / arrays --------------------------------------------------------
     MTL::Device *device = MTL::CreateSystemDefaultDevice();
     MetalAdder *adder = new MetalAdder(device);
+
+    Model *m = new Model("assets/tutorial.obj", device);
 
     // Verify Metal code ---------------------------------------------------------------
     adder->sendComputeCommand(); // This computes the array sum
