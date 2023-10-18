@@ -32,12 +32,12 @@ add_library("RendererLib"
     "mesh.cpp"
     "TextureArray.cpp"
     "model.cpp"
+    "MetalEngine.cpp"
 )
 add_library(stb "stb/stb_image.cpp")
 # specify the executable target to be built
 add_executable(augmented_reality_on_webcam
-  main.cpp
-  MetalAdder.cpp)
+  main.cpp)
 
 #set_property(TARGET augmented_reality_on_webcam PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
@@ -45,16 +45,6 @@ target_link_libraries(augmented_reality_on_webcam "RendererLib")
 
 # tell it to link the executable target against OpenCV
 target_link_libraries(augmented_reality_on_webcam ${OpenCV_LIBS})
-
-target_include_directories(augmented_reality_on_webcam
-  SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/metal-cpp
-)
-
-target_link_libraries(augmented_reality_on_webcam
-  ${APPLE_FWK_FOUNDATION}
-  ${APPLE_FWK_QUARTZ_CORE}
-  ${APPLE_FWK_METAL}
-)
 
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/libs CACHE PATH "Missing description." FORCE)

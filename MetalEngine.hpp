@@ -1,24 +1,13 @@
-//
-//  mtl_engine.hpp
-//  MetalTutorial
-//
-
 #pragma once
 
-#include <Metal/Metal.hpp>
-#include <Metal/Metal.h>
-#include <QuartzCore/CAMetalLayer.hpp>
-#include <QuartzCore/CAMetalLayer.h>
-#include <QuartzCore/QuartzCore.hpp>
 #include <simd/simd.h>
 
-#include "AAPLMathUtilities.h"
 #include "mesh.hpp"
 #include "model.hpp"
-#include "camera.hpp"
+#include <QuartzCore/CAMetalLayer.hpp>
+#include <QuartzCore/CAMetalLayer.h>
 
 #include <iostream>
-#include <filesystem>
 
 class MTLEngine {
 public:
@@ -33,8 +22,8 @@ private:
     void loadMeshes();
     void createDefaultLibrary();
     void createRenderPipeline();
-    void createDepthAndMSAATextures();
-    void createRenderPassDescriptor();
+    //void createDepthAndMSAATextures();
+    //void createRenderPassDescriptor();
     
     // Upon resizing, update Depth and MSAA Textures.
     void updateRenderPassDescriptor();
@@ -44,10 +33,12 @@ private:
     void encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder);
     
     MTL::Device* metalDevice;
+    CA::MetalLayer* metalLayer;
     CA::MetalDrawable* metalDrawable;
     bool windowResizeFlag = false;
     int newWidth, newHeight;
     
+    NS::Error *error = nullptr;
     MTL::Library* metalDefaultLibrary;
     MTL::CommandQueue* metalCommandQueue;
     MTL::CommandBuffer* metalCommandBuffer;
@@ -57,16 +48,5 @@ private:
     MTL::DepthStencilState* depthStencilState;
     MTL::Texture* depthTexture;
     Model* model;
-    int sampleCount = 4;
-    
-    // Camera
-    Camera camera;
-    float lastX;
-    float lastY;
-    bool firstMouse = true;
-
-    // Timing
-    float deltaTime = 0.0f;    // time between current frame and last frame
-    float lastFrame = 0.0f;
-    
+    int sampleCount = 4;    
 };

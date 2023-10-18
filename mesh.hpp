@@ -7,7 +7,6 @@
 
 #include <simd/simd.h>
 using namespace simd;
-#include "Metal/Metal.hpp"
 
 #include <vector>
 #include <string>

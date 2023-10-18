@@ -1,10 +1,4 @@
-//
-//  model.cpp
-//  Metal-Tutorial
-//
-
 #include "model.hpp"
-
 #include <iostream>
 
 Model::Model(std::string filePath, MTL::Device* metalDevice) {

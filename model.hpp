@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <Metal/Metal.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
