@@ -128,8 +128,33 @@ void MTLEngine::createRenderPipeline() {
   fragmentShader->release();
 }
 
-CA::MetalDrawable* MTLEngine::run() {
-  return metalLayer->nextDrawable();
+CA::MetalDrawable *MTLEngine::run() {
+  auto drawable = metalLayer->nextDrawable();
+
+  /*MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
+  desc->setTextureType(MTL::TextureType::TextureType2D);
+  desc->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
+  desc->setWidth(drawable->texture()->width());
+  desc->setHeight(drawable->texture()->height());
+
+  MTL::Texture* texture = metalDevice->newTexture(desc);
+  MTL::RenderPassDescriptor *renderPassDesc =
+  MTL::RenderPassDescriptor::alloc()->init();
+  MTL::RenderPassColorAttachmentDescriptor *colorAttachment =
+      renderPassDescriptor->colorAttachments()->object(0);
+
+  colorAttachment->setTexture(texture);
+  colorAttachment->setLoadAction(MTL::LoadAction::LoadActionClear);
+  colorAttachment->setClearColor({0.0, 0.0, 0.0, 1.0});
+
+  MTL::CommandBuffer* commandBuffer = metalCommandQueue->commandBuffer();
+  MTL::RenderCommandEncoder* encoder =
+      commandBuffer->renderCommandEncoder(renderPassDesc);
+  // Your rendering commands here
+  encoder->endEncoding();
+  commandBuffer->presentDrawable(drawable);
+  commandBuffer->commit();*/
+  return drawable;
 }
 
 void MTLEngine::createDepthAndMSAATextures() {
