@@ -12,7 +12,7 @@
 class MTLEngine {
 public:
     void init();
-    void run();
+    CA::MetalDrawable* run();
     void cleanup();
     
 private:
@@ -22,8 +22,8 @@ private:
     void loadMeshes();
     void createDefaultLibrary();
     void createRenderPipeline();
-    //void createDepthAndMSAATextures();
-    //void createRenderPassDescriptor();
+    void createDepthAndMSAATextures();
+    void createRenderPassDescriptor();
     
     // Upon resizing, update Depth and MSAA Textures.
     void updateRenderPassDescriptor();
@@ -46,6 +46,7 @@ private:
     MTL::RenderPassDescriptor* renderPassDescriptor;
     Mesh* mesh;
     MTL::DepthStencilState* depthStencilState;
+    MTL::Texture* msaaRenderTargetTexture;
     MTL::Texture* depthTexture;
     Model* model;
     int sampleCount = 4;    

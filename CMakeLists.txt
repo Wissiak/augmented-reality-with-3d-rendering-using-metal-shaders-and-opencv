@@ -33,6 +33,7 @@ add_library("RendererLib"
     "TextureArray.cpp"
     "model.cpp"
     "MetalEngine.cpp"
+    "AAPLMathUtilities.cpp"
 )
 add_library(stb "stb/stb_image.cpp")
 # specify the executable target to be built

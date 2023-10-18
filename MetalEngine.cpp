@@ -1,10 +1,11 @@
 #define NS_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
 #define MTL_PRIVATE_IMPLEMENTATION
+#include "MetalEngine.hpp"
 #include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
+#include <QuartzCore/CAMetalLayer.h>
 #include <QuartzCore/QuartzCore.hpp>
-#include "MetalEngine.hpp"
 #include <iostream>
 
 /*
@@ -50,14 +51,16 @@ MTL::ResourceStorageModeShared);
 void MTLEngine::init() {
   initDevice();
 
-  //metalLayer = new CA::MetalLayer();
+  metalLayer = CA::MetalLayer::layer();
+  metalLayer->setDevice(metalDevice);
+  metalLayer->setDrawableSize(CGSizeMake(900, 800));
 
   createCommandQueue();
   createDefaultLibrary();
   loadMeshes();
   createRenderPipeline();
-  //createDepthAndMSAATextures();
-  //createRenderPassDescriptor();
+  createDepthAndMSAATextures();
+  createRenderPassDescriptor();
 }
 
 void MTLEngine::initDevice() { metalDevice = MTL::CreateSystemDefaultDevice(); }
@@ -79,51 +82,107 @@ void MTLEngine::loadMeshes() {
   std::cout << "Mesh Count: " << model->meshes.size() << std::endl;
 }
 
-
 void MTLEngine::createRenderPipeline() {
-    MTL::Function* vertexShader = metalDefaultLibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
-    assert(vertexShader);
-    MTL::Function* fragmentShader = metalDefaultLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
-    assert(fragmentShader);
-    
-    MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
-    renderPipelineDescriptor->setVertexFunction(vertexShader);
-    renderPipelineDescriptor->setFragmentFunction(fragmentShader);
-    assert(renderPipelineDescriptor);
-    //MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer->pixelFormat();
-    //renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
-    renderPipelineDescriptor->setSampleCount(4);
-    renderPipelineDescriptor->setLabel(NS::String::string("Model Render Pipeline", NS::ASCIIStringEncoding));
-    renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-    renderPipelineDescriptor->setTessellationOutputWindingOrder(MTL::WindingCounterClockwise);
-    
-    NS::Error* error;
-    metalRenderPSO = metalDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
-    
-    if (metalRenderPSO == nil) {
-        std::cout << "Error creating render pipeline state: " << error << std::endl;
-        std::exit(0);
-    }
-    
-    MTL::DepthStencilDescriptor* depthStencilDescriptor = MTL::DepthStencilDescriptor::alloc()->init();
-    depthStencilDescriptor->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
-    depthStencilDescriptor->setDepthWriteEnabled(true);
-    depthStencilState = metalDevice->newDepthStencilState(depthStencilDescriptor);
-    
-    depthStencilDescriptor->release();
-    renderPipelineDescriptor->release();
-    vertexShader->release();
-    fragmentShader->release();
+  MTL::Function *vertexShader = metalDefaultLibrary->newFunction(
+      NS::String::string("vertexShader", NS::ASCIIStringEncoding));
+  assert(vertexShader);
+  MTL::Function *fragmentShader = metalDefaultLibrary->newFunction(
+      NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
+  assert(fragmentShader);
+
+  MTL::RenderPipelineDescriptor *renderPipelineDescriptor =
+      MTL::RenderPipelineDescriptor::alloc()->init();
+  renderPipelineDescriptor->setVertexFunction(vertexShader);
+  renderPipelineDescriptor->setFragmentFunction(fragmentShader);
+  assert(renderPipelineDescriptor);
+  MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer->pixelFormat();
+  renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(
+      pixelFormat);
+  renderPipelineDescriptor->setSampleCount(4);
+  renderPipelineDescriptor->setLabel(
+      NS::String::string("Model Render Pipeline", NS::ASCIIStringEncoding));
+  renderPipelineDescriptor->setDepthAttachmentPixelFormat(
+      MTL::PixelFormatDepth32Float);
+  renderPipelineDescriptor->setTessellationOutputWindingOrder(
+      MTL::WindingCounterClockwise);
+
+  NS::Error *error;
+  metalRenderPSO =
+      metalDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
+
+  if (metalRenderPSO == nil) {
+    std::cout << "Error creating render pipeline state: " << error << std::endl;
+    std::exit(0);
+  }
+
+  MTL::DepthStencilDescriptor *depthStencilDescriptor =
+      MTL::DepthStencilDescriptor::alloc()->init();
+  depthStencilDescriptor->setDepthCompareFunction(
+      MTL::CompareFunctionLessEqual);
+  depthStencilDescriptor->setDepthWriteEnabled(true);
+  depthStencilState = metalDevice->newDepthStencilState(depthStencilDescriptor);
+
+  depthStencilDescriptor->release();
+  renderPipelineDescriptor->release();
+  vertexShader->release();
+  fragmentShader->release();
 }
 
+CA::MetalDrawable* MTLEngine::run() {
+  return metalLayer->nextDrawable();
+}
 
-void MTLEngine::run() {
+void MTLEngine::createDepthAndMSAATextures() {
+  MTL::TextureDescriptor *msaaTextureDescriptor =
+      MTL::TextureDescriptor::alloc()->init();
+  msaaTextureDescriptor->setTextureType(MTL::TextureType2DMultisample);
+  msaaTextureDescriptor->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
+  msaaTextureDescriptor->setWidth(metalLayer->drawableSize().width);
+  msaaTextureDescriptor->setHeight(metalLayer->drawableSize().height);
+  msaaTextureDescriptor->setSampleCount(sampleCount);
+  msaaTextureDescriptor->setUsage(MTL::TextureUsageRenderTarget);
+
+  msaaRenderTargetTexture = metalDevice->newTexture(msaaTextureDescriptor);
+
+  MTL::TextureDescriptor *depthTextureDescriptor =
+      MTL::TextureDescriptor::alloc()->init();
+  depthTextureDescriptor->setTextureType(MTL::TextureType2DMultisample);
+  depthTextureDescriptor->setPixelFormat(MTL::PixelFormatDepth32Float);
+  depthTextureDescriptor->setWidth(metalLayer->drawableSize().width);
+  depthTextureDescriptor->setHeight(metalLayer->drawableSize().height);
+  depthTextureDescriptor->setUsage(MTL::TextureUsageRenderTarget);
+  depthTextureDescriptor->setSampleCount(sampleCount);
+
+  depthTexture = metalDevice->newTexture(depthTextureDescriptor);
+
+  msaaTextureDescriptor->release();
+  depthTextureDescriptor->release();
+}
+
+void MTLEngine::createRenderPassDescriptor() {
+  renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
+
+  MTL::RenderPassColorAttachmentDescriptor *colorAttachment =
+      renderPassDescriptor->colorAttachments()->object(0);
+  MTL::RenderPassDepthAttachmentDescriptor *depthAttachment =
+      renderPassDescriptor->depthAttachment();
+
+  colorAttachment->setTexture(msaaRenderTargetTexture);
+  colorAttachment->setResolveTexture(metalDrawable->texture());
+  colorAttachment->setLoadAction(MTL::LoadActionClear);
+  colorAttachment->setClearColor(
+      MTL::ClearColor(41.0f / 255.0f, 42.0f / 255.0f, 48.0f / 255.0f, 1.0));
+  colorAttachment->setStoreAction(MTL::StoreActionMultisampleResolve);
+
+  depthAttachment->setTexture(depthTexture);
+  depthAttachment->setLoadAction(MTL::LoadActionClear);
+  depthAttachment->setStoreAction(MTL::StoreActionDontCare);
+  depthAttachment->setClearDepth(1.0);
 }
 
 void MTLEngine::cleanup() {
-//    delete mesh;
-    delete model;
-    depthTexture->release();
-    renderPassDescriptor->release();
-    metalDevice->release();
+  delete model;
+  depthTexture->release();
+  renderPassDescriptor->release();
+  metalDevice->release();
 }
