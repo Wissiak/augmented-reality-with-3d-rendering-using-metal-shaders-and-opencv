@@ -1,3 +1,5 @@
 build
 .cache
 compile_command.json
+.DS_Store
+*.ir

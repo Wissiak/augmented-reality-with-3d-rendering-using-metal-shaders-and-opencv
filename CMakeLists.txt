@@ -23,21 +23,37 @@ find_package( OpenCV REQUIRED )
 # tell the build to include the headers from OpenCV
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
+
 find_library(APPLE_FWK_FOUNDATION Foundation REQUIRED)
 find_library(APPLE_FWK_QUARTZ_CORE QuartzCore REQUIRED)
 find_library(APPLE_FWK_METAL Metal REQUIRED)
 
+add_library(MetalAdder
+    "MetalAdder.cpp"
+)
 # specify the executable target to be built
-add_executable(augmented_reality_on_webcam main.cpp)
+add_executable(augmented_reality_on_webcam MACOSX_BUNDLE
+  main.cpp
+  MetalAdder
+  add.metal)
 
 # tell it to link the executable target against OpenCV
-target_link_libraries(augmented_reality_on_webcam ${OpenCV_LIBS} )
+target_link_libraries(augmented_reality_on_webcam ${OpenCV_LIBS})
 
 target_include_directories(augmented_reality_on_webcam
   SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/metal-cpp
 )
 
 target_link_libraries(augmented_reality_on_webcam
+  ${APPLE_FWK_FOUNDATION}
+  ${APPLE_FWK_QUARTZ_CORE}
+  ${APPLE_FWK_METAL}
+)
+
+target_include_directories(MetalAdder
+  SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/metal-cpp
+)
+target_link_libraries(MetalAdder
   ${APPLE_FWK_FOUNDATION}
   ${APPLE_FWK_QUARTZ_CORE}
   ${APPLE_FWK_METAL}
