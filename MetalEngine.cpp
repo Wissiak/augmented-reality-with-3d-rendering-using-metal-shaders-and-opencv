@@ -54,7 +54,7 @@ void MTLEngine::init() {
   metalLayer = CA::MetalLayer::layer();
   metalLayer->setDevice(metalDevice);
   metalLayer->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
-  metalLayer->setDrawableSize(CGSizeMake(959, 539));
+  metalLayer->setDrawableSize(CGSizeMake(1920, 1080));
 
   createCommandQueue();
   createDefaultLibrary();

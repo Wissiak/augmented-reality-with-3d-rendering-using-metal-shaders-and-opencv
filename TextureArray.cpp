@@ -1,16 +1,7 @@
-//
-//  TextureArray.cpp
-//  Metal-Tutorial
-//
 #include <iostream>
 #include <cmath>
 
 #include "TextureArray.hpp"
-
-/*
- TODO:
-    - Detect maximum texture array size for given GPU
- */
 
 TextureArray::TextureArray(std::vector<std::string>& filePaths,
                            MTL::Device* metalDevice) {
