@@ -139,13 +139,13 @@ void MTLEngine::updateRenderPassDescriptor() {
   renderPassDescriptor->depthAttachment()->setTexture(depthTexture);
 }
 
-void MTLEngine::sendRenderCommand(float3 position, float pitch, float yaw) {
+void MTLEngine::sendRenderCommand(float3 position, float pitch, float yaw, matrix_float4x4 rotationMatrix, matrix_float4x4 modelMatrix) {
   metalCommandBuffer = metalCommandQueue->commandBuffer();
 
   updateRenderPassDescriptor();
   MTL::RenderCommandEncoder *renderCommandEncoder =
       metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
-  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw);
+  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw, rotationMatrix, modelMatrix);
   renderCommandEncoder->endEncoding();
 
   metalCommandBuffer->presentDrawable(metalDrawable);
@@ -171,7 +171,7 @@ simd::float4x4 lookAt(const simd::float3 eye, const simd::float3 center,
 }
 
 void MTLEngine::encodeRenderCommand(
-    MTL::RenderCommandEncoder *renderCommandEncoder, float3 position, float pitch, float yaw) {
+    MTL::RenderCommandEncoder *renderCommandEncoder, float3 position, float pitch, float yaw, matrix_float4x4 rotationMatrix, matrix_float4x4 modelMatrix) {
   renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
   renderCommandEncoder->setCullMode(MTL::CullModeBack);
   // If you want to render in wire-frame mode, you can uncomment this line!
@@ -179,19 +179,13 @@ void MTLEngine::encodeRenderCommand(
   renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
   renderCommandEncoder->setDepthStencilState(depthStencilState);
 
-  //    matrix_float4x4 rotationMatrix = matrix4x4_rotation((M_PI / 180.0f)
-  //    * 90.0f, 0.0, 0.0, 1.0);
-  matrix_float4x4 rotationMatrix =
-      matrix4x4_rotation(90 * (M_PI / 180.0f), 0.0, 1.0, 0.0);
-  matrix_float4x4 modelMatrix =
-      matrix4x4_translation(0.0, 0.0, -5.0) * rotationMatrix;
   // Aspect ratio should match the ratio between the window width and height,
   // otherwise the image will look stretched.
   float aspectRatio = (metalDrawable->layer()->drawableSize().width /
                        metalDrawable->layer()->drawableSize().height);
   float fov = 45.0f * (M_PI / 180.0f);
   float nearZ = 0.1f;
-  float farZ = 1000.0f;
+  float farZ = 10000.0f;
   matrix_float4x4 perspectiveMatrix =
       matrix_perspective_right_hand(fov, aspectRatio, nearZ, farZ);
   MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
@@ -235,9 +229,9 @@ void MTLEngine::encodeRenderCommand(
   }
 }
 
-CA::MetalDrawable *MTLEngine::run(float3 position, float pitch, float yaw) {
+CA::MetalDrawable *MTLEngine::run(float3 position, float pitch, float yaw, matrix_float4x4 rotationMatrix, matrix_float4x4 modelMatrix) {
+  sendRenderCommand(position, pitch, yaw, rotationMatrix, modelMatrix);
   metalDrawable = metalLayer->nextDrawable();
-  sendRenderCommand(position, pitch, yaw);
 
   /*MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
   desc->setTextureType(MTL::TextureType::TextureType2D);

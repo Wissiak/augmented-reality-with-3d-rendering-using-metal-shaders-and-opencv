@@ -1,7 +1,3 @@
-//
-//  cube.metal
-//  MetalTutorial
-//
 #include <metal_stdlib>
 using namespace metal;
 
@@ -76,13 +72,13 @@ fragment float4 fragmentShader(OutData in [[stage_in]],
     //idx = in.specularTextureIndex;
     //float2 transformedSpecularUV = in.textureCoordinate * (float2(textureInfoBuffer[idx].width, textureInfoBuffer[idx].height) / float2(textureArray.get_width(0), textureArray.get_height(0)));
     //const float4 specularSample = textureArray.sample(textureSampler, transformedSpecularUV, in.specularTextureIndex);
-    
+    /*
     idx = in.normalMapIndex;
     float2 transformedNormalUV = in.textureCoordinate * (float2(textureInfoBuffer[idx].width, textureInfoBuffer[idx].height) / float2(textureArray.get_width(0), textureArray.get_height(0)));
     float4 normalSample = textureArray.sample(textureSampler, transformedNormalUV, in.normalMapIndex);
     normalSample = float4(normalSample.rgb * 2.0 - 1.0, 1.0);
     float3x3 TBN = float3x3(in.T, in.B, in.N);
-    normalSample = normalize(float4(TBN * normalSample.xyz, 1.0));
+    normalSample = normalize(float4(TBN * normalSample.xyz, 1.0));*/
     
     //idx = in.emissiveMapIndex;
     //float2 transformedEmissiveUV = in.textureCoordinate * (float2(textureInfoBuffer[idx].width, textureInfoBuffer[idx].height) / float2(textureArray.get_width(0), textureArray.get_height(0)));
