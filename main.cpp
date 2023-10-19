@@ -132,19 +132,14 @@ public:
     cv::Mat image(texture->height(), texture->width(), CV_8UC4,
                   imageData.data());
 
-    cv::Mat test;
-    // Converting the image from BGRA to BGR and saving it in the dst_mat matrix
-    cv::cvtColor(videoFrame, test, cv::COLOR_BGR2BGRA);
+    // Converting the image from BGR to BGRA in order to overlay the images
+    cv::cvtColor(videoFrame, videoFrame, cv::COLOR_BGR2BGRA);
 
-    std::cout << "Rendered Channels: " << image.channels()
-              << ", videoFrame Channels: " << test.channels()
-              << std::endl;
     // Overlay images
     cv::Mat dst;
-    cv::addWeighted(image, 1, test, 1, 0, dst);
+    cv::addWeighted(image, 1, videoFrame, 1, 0, dst);
 
-    cv::imshow("Image", dst);
-    cv::waitKey(0);
+    cv::imshow("AR Video Output", dst);
   }
 };
 
