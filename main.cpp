@@ -1,4 +1,5 @@
 // OpenCV imports must come first
+#include <Foundation/NSTypes.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/core/hal/interface.h>
 #include <opencv2/core/mat.hpp>
@@ -10,23 +11,12 @@
 // End OpenCV Imports
 #include "MetalEngine.hpp"
 #include <filesystem>
+#include <opencv2/videoio.hpp>
 
 class ARWebcam {
-private:
-  const cv::Mat referenceImage = cv::imread("./assets/book1-reference.png");
-
-  std::vector<cv::KeyPoint> referenceKeypoints;
-
-  cv::Mat referenceDescriptors;
-  cv::Ptr<cv::SiftFeatureDetector> detector;
-  cv::Ptr<cv::BFMatcher> matcher;
-  std::vector<cv::Point2f> corners{4};
-  bool const showMatches = false;
-
-  MTLEngine engine;
 
 public:
-  ARWebcam(MTLEngine mEngine) {
+  ARWebcam(MTLEngine mEngine, cv::Size imgSize) {
     detector = cv::SiftFeatureDetector::create(1000, 4, 0.001, 20, 1.5);
     detector->detectAndCompute(referenceImage, cv::noArray(),
                                referenceKeypoints, referenceDescriptors);
@@ -40,15 +30,17 @@ public:
     corners.push_back(cv::Point2f(width - 1, 0));
     corners.push_back(cv::Point2f(width - 1, height - 1));
     corners.push_back(cv::Point2f(0, height - 1));
+
+    bytesPerRow = imgSize.width * 4;
+    region.origin = {0, 0, 0};
+    region.size = {NS::UInteger(imgSize.width), NS::UInteger(imgSize.height), 1};
   }
 
-  void video_in() {
+  void video_in(cv::VideoCapture cap) {
     cv::Mat videoFrame;
-    cv::namedWindow("Video Player");
-    cv::VideoCapture cap(0);
     if (!cap.isOpened()) {
-      std::cout << "No video stream detected" << std::endl;
-      system("pause");
+      std::cerr << "No video stream detected" << std::endl;
+      return;
     }
     while (true) {
       cap >> videoFrame;
@@ -99,7 +91,10 @@ public:
       }
       // imshow("Video Player", videoFrame);
       try {
-        startPipeline(engine, videoFrame);
+        float3 position = make_float3(20, 40, 20);
+        float yaw = rand() % 20 + -110;
+        float pitch = rand() % 20 + -30;
+        startPipeline(engine, videoFrame, position, pitch, yaw);
       } catch (const std::exception &ex) {
         std::cerr << "Render Pipeline error: " << ex.what() << std::endl;
       }
@@ -113,16 +108,29 @@ public:
     cap.release();
   }
 
-  void startPipeline(MTLEngine engine, cv::Mat videoFrame) {
-    CA::MetalDrawable *drawable = engine.run();
+private:
+  const cv::Mat referenceImage = cv::imread("./assets/book1-reference.png");
+
+  std::vector<cv::KeyPoint> referenceKeypoints;
+
+  cv::Mat referenceDescriptors;
+  cv::Ptr<cv::SiftFeatureDetector> detector;
+  cv::Ptr<cv::BFMatcher> matcher;
+  std::vector<cv::Point2f> corners{4};
+  bool const showMatches = false;
+
+  MTLEngine engine;
+
+  MTL::Region region;
+  NS::UInteger bytesPerRow;
+  NS::UInteger bytesPerImage = 0;
+  NS::UInteger level = 0;
+  NS::UInteger slice = 0;
+
+  void startPipeline(MTLEngine engine, cv::Mat videoFrame, float3 position,
+                     float pitch, float yaw) {
+    CA::MetalDrawable *drawable = engine.run(position, pitch, yaw);
     auto texture = drawable->texture();
-    MTL::Region region;
-    region.origin = {0, 0, 0};
-    region.size = {texture->width(), texture->height(), 1};
-    NS::UInteger bytesPerRow = texture->width() * 4; // Assuming RGBA format
-    NS::UInteger bytesPerImage = 0;                  // For 2D textures
-    NS::UInteger level = 0;                          // Mipmap level
-    NS::UInteger slice = 0;
 
     std::vector<uint8_t> imageData(texture->width() * texture->height() * 4);
 
@@ -145,11 +153,16 @@ public:
 
 int main(int argc, char **argv) {
   std::cout << "Current path is " << std::filesystem::current_path() << '\n';
-  MTLEngine engine;
-  engine.init();
-  ARWebcam arWebcam(engine);
 
-  arWebcam.video_in();
+  cv::VideoCapture cap(0);
+  int width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+  int height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+
+  MTLEngine engine;
+  engine.init(width, height);
+  ARWebcam arWebcam{engine, cv::Size{width, height}};
+
+  arWebcam.video_in(cap);
 
   engine.cleanup();
 

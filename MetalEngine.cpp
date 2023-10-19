@@ -48,13 +48,15 @@ MTL::ResourceStorageModeShared);
     prepareData();
 }*/
 
-void MTLEngine::init() {
+void MTLEngine::init(int width, int height) {
   initDevice();
 
   metalLayer = CA::MetalLayer::layer();
   metalLayer->setDevice(metalDevice);
   metalLayer->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
-  metalLayer->setDrawableSize(CGSizeMake(1920, 1080));
+  metalLayer->setDrawableSize(CGSizeMake(width, height));
+
+  metalDrawable = metalLayer->nextDrawable();
 
   createCommandQueue();
   createDefaultLibrary();
@@ -62,8 +64,6 @@ void MTLEngine::init() {
   createRenderPipeline();
   createDepthAndMSAATextures();
   createRenderPassDescriptor();
-
-  metalDrawable = metalLayer->nextDrawable();
 }
 
 void MTLEngine::initDevice() { metalDevice = MTL::CreateSystemDefaultDevice(); }
@@ -139,13 +139,13 @@ void MTLEngine::updateRenderPassDescriptor() {
   renderPassDescriptor->depthAttachment()->setTexture(depthTexture);
 }
 
-void MTLEngine::sendRenderCommand() {
+void MTLEngine::sendRenderCommand(float3 position, float pitch, float yaw) {
   metalCommandBuffer = metalCommandQueue->commandBuffer();
 
   updateRenderPassDescriptor();
   MTL::RenderCommandEncoder *renderCommandEncoder =
       metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
-  encodeRenderCommand(renderCommandEncoder);
+  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw);
   renderCommandEncoder->endEncoding();
 
   metalCommandBuffer->presentDrawable(metalDrawable);
@@ -171,7 +171,7 @@ simd::float4x4 lookAt(const simd::float3 eye, const simd::float3 center,
 }
 
 void MTLEngine::encodeRenderCommand(
-    MTL::RenderCommandEncoder *renderCommandEncoder) {
+    MTL::RenderCommandEncoder *renderCommandEncoder, float3 position, float pitch, float yaw) {
   renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
   renderCommandEncoder->setCullMode(MTL::CullModeBack);
   // If you want to render in wire-frame mode, you can uncomment this line!
@@ -202,11 +202,7 @@ void MTLEngine::encodeRenderCommand(
   MTL::SamplerState *samplerState =
       metalDevice->newSamplerState(samplerDescriptor);
 
-  //--------------------------------------------------------------------------------
-  float3 position = make_float3(-20,20,40);
   float3 up = make_float3(0.0f, 1.0f, 0.0f);
-  float yaw = 0.0f;
-  float pitch = 0.0f;
 
   float3 front;
   front.x = cos(radians(yaw)) * cos(radians(pitch));
@@ -218,7 +214,7 @@ void MTLEngine::encodeRenderCommand(
   up = normalize(cross(right, front));
 
   matrix_float4x4 viewMatrix =
-      lookAt(position, position + make_float3(0.0f, 0.0f, -1.0f), up);
+      lookAt(position, position + front, up);
   for (Mesh *mesh : model->meshes) {
     renderCommandEncoder->setVertexBuffer(mesh->vertexBuffer, 0, 0);
     renderCommandEncoder->setVertexBytes(&modelMatrix, sizeof(modelMatrix), 1);
@@ -239,9 +235,9 @@ void MTLEngine::encodeRenderCommand(
   }
 }
 
-CA::MetalDrawable *MTLEngine::run() {
+CA::MetalDrawable *MTLEngine::run(float3 position, float pitch, float yaw) {
   metalDrawable = metalLayer->nextDrawable();
-  sendRenderCommand();
+  sendRenderCommand(position, pitch, yaw);
 
   /*MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
   desc->setTextureType(MTL::TextureType::TextureType2D);

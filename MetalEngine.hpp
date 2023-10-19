@@ -12,8 +12,8 @@
 
 class MTLEngine {
 public:
-    void init();
-    CA::MetalDrawable* run();
+    void init(int width, int height);
+    CA::MetalDrawable* run(float3 position, float pitch, float yaw);
     void cleanup();
     
 private:
@@ -30,8 +30,8 @@ private:
     void updateRenderPassDescriptor();
     
     void draw();
-    void sendRenderCommand();
-    void encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder);
+    void sendRenderCommand(float3 position, float pitch, float yaw);
+    void encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder, float3 position, float pitch, float yaw);
     
     MTL::Device* metalDevice;
     CA::MetalLayer* metalLayer;
