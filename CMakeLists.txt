@@ -40,6 +40,11 @@ add_library(stb "stb/stb_image.cpp")
 add_executable(augmented_reality_on_webcam
   main.cpp)
 
+add_custom_command(TARGET augmented_reality_on_webcam
+  PRE_BUILD
+  COMMAND /bin/sh ${PROJECT_SOURCE_DIR}/compile-metal-lib.sh
+)
+
 #set_property(TARGET augmented_reality_on_webcam PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
 target_link_libraries(augmented_reality_on_webcam "RendererLib")

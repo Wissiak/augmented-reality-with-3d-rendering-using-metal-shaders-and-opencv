@@ -73,7 +73,7 @@ void MTLEngine::createCommandQueue() {
 }
 void MTLEngine::createDefaultLibrary() {
   NS::String *filePath =
-      NS::String::string("./model.metallib", NS::UTF8StringEncoding);
+      NS::String::string("./build/model.metallib", NS::UTF8StringEncoding);
   metalDefaultLibrary = metalDevice->newLibrary(filePath, &error);
 
   assert(metalDefaultLibrary != nullptr);
