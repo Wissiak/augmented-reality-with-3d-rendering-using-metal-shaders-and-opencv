@@ -53,9 +53,8 @@ void MTLEngine::init() {
 
   metalLayer = CA::MetalLayer::layer();
   metalLayer->setDevice(metalDevice);
+  metalLayer->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
   metalLayer->setDrawableSize(CGSizeMake(959, 539));
-
-  metalDrawable = metalLayer->nextDrawable();
 
   createCommandQueue();
   createDefaultLibrary();
@@ -63,6 +62,8 @@ void MTLEngine::init() {
   createRenderPipeline();
   createDepthAndMSAATextures();
   createRenderPassDescriptor();
+
+  metalDrawable = metalLayer->nextDrawable();
 }
 
 void MTLEngine::initDevice() { metalDevice = MTL::CreateSystemDefaultDevice(); }
@@ -131,9 +132,11 @@ void MTLEngine::createRenderPipeline() {
 }
 
 void MTLEngine::updateRenderPassDescriptor() {
-    renderPassDescriptor->colorAttachments()->object(0)->setTexture(msaaRenderTargetTexture);
-    renderPassDescriptor->colorAttachments()->object(0)->setResolveTexture(metalDrawable->texture());
-    renderPassDescriptor->depthAttachment()->setTexture(depthTexture);
+  renderPassDescriptor->colorAttachments()->object(0)->setTexture(
+      msaaRenderTargetTexture);
+  renderPassDescriptor->colorAttachments()->object(0)->setResolveTexture(
+      metalDrawable->texture());
+  renderPassDescriptor->depthAttachment()->setTexture(depthTexture);
 }
 
 void MTLEngine::sendRenderCommand() {
@@ -200,10 +203,10 @@ void MTLEngine::encodeRenderCommand(
       metalDevice->newSamplerState(samplerDescriptor);
 
   //--------------------------------------------------------------------------------
-  float3 position = make_float3(-20.7519, 16.0886, -26.0648);
+  float3 position = make_float3(-20,20,40);
   float3 up = make_float3(0.0f, 1.0f, 0.0f);
-  float yaw = 0;
-  float pitch = 0;
+  float yaw = 0.0f;
+  float pitch = 0.0f;
 
   float3 front;
   front.x = cos(radians(yaw)) * cos(radians(pitch));
@@ -211,10 +214,7 @@ void MTLEngine::encodeRenderCommand(
   front.z = sin(radians(yaw)) * cos(radians(pitch));
   front = normalize(front);
   // also re-calculate the Right and Up vector
-  float3 right = normalize(cross(
-      front,
-      up)); // normalize the vectors, because their length gets closer to 0 the
-            // more you look up or down which results in slower movement.
+  float3 right = normalize(cross(front, up));
   up = normalize(cross(right, front));
 
   matrix_float4x4 viewMatrix =
@@ -240,8 +240,8 @@ void MTLEngine::encodeRenderCommand(
 }
 
 CA::MetalDrawable *MTLEngine::run() {
-  sendRenderCommand();
   metalDrawable = metalLayer->nextDrawable();
+  sendRenderCommand();
 
   /*MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
   desc->setTextureType(MTL::TextureType::TextureType2D);
@@ -307,8 +307,7 @@ void MTLEngine::createRenderPassDescriptor() {
   colorAttachment->setTexture(msaaRenderTargetTexture);
   colorAttachment->setResolveTexture(metalDrawable->texture());
   colorAttachment->setLoadAction(MTL::LoadActionClear);
-  colorAttachment->setClearColor(
-      MTL::ClearColor(41.0f / 255.0f, 42.0f / 255.0f, 48.0f / 255.0f, 1.0));
+  colorAttachment->setClearColor(MTL::ClearColor(0.0, 0.0, 0.0, 0.0));
   colorAttachment->setStoreAction(MTL::StoreActionMultisampleResolve);
 
   depthAttachment->setTexture(depthTexture);

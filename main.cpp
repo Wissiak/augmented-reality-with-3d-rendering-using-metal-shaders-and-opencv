@@ -5,7 +5,7 @@
 #include <filesystem>
 
 void startPipeline(MTLEngine engine) {
-  CA::MetalDrawable* drawable = engine.run();
+  CA::MetalDrawable *drawable = engine.run();
   auto texture = drawable->texture();
   MTL::Region region;
   region.origin = {0, 0, 0};
