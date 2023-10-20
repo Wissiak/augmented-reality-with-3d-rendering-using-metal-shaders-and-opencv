@@ -1,4 +1,5 @@
 #include "ARWebcam.hpp"
+#include "opencv2/core.hpp"
 
 ARWebcam::ARWebcam(MTLEngine mEngine, cv::Size imgSize) {
   detector = cv::SiftFeatureDetector::create(3000, 8, 0.001, 20, 1.5);
@@ -133,10 +134,9 @@ auto ARWebcam::startPipeline(MTLEngine engine, cv::Mat videoFrame,
   cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
 
   // Overlay images
-  cv::Mat dst;
-  cv::addWeighted(videoFrame, 1, image, 1, 0, dst);
+  cv::copyTo(image, videoFrame, image);
 
-  cv::imshow("AR Video Output", dst);
+  cv::imshow("AR Video Output", videoFrame);
 }
 
 auto ARWebcam::focalLength(const cv::Mat &H_c_b) -> double {
