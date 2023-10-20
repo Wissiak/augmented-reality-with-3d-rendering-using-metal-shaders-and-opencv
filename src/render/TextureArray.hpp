@@ -5,7 +5,7 @@
 
 #pragma once
 #include <Metal/Metal.hpp>
-#include "built-libs/stb/stb_image.h"
+#include "../../built-libs/stb/stb_image.h"
 #include <vector>
 
 #include "VertexData.hpp"

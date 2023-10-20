@@ -12,10 +12,10 @@ find_library(APPLE_FWK_METAL Metal REQUIRED)
 
 add_library("RendererLib"
   "ARWebcam.cpp"
-  "mesh.cpp"
-  "TextureArray.cpp"
-  "model.cpp"
-  "MetalEngine.cpp"
+  "render/mesh.cpp"
+  "render/TextureArray.cpp"
+  "render/model.cpp"
+  "render/MetalEngine.cpp"
 )
 add_library(stb "built-libs/stb/stb_image.cpp")
 add_library(aapl "built-libs/aapl/AAPLMathUtilities.cpp")
