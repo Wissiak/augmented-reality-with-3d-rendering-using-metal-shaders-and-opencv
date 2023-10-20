@@ -45,7 +45,7 @@ private:
   CA::MetalDrawable *metalDrawable;
   bool windowResizeFlag = false;
   int newWidth, newHeight;
-  float3 up = make_float3(0.0f, 1.0f, 0.0f);
+  float3 up = make_float3(0.0f, -1.0f, 0.0f);
 
   NS::Error *error = nullptr;
   MTL::Library *metalDefaultLibrary;

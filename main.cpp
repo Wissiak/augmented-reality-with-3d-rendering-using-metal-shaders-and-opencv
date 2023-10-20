@@ -148,7 +148,7 @@ private:
     cv::Mat rotationAxis;
     cv::Rodrigues(R_c_b, rotationAxis);
     double theta = cv::norm(rotationAxis);
-    rotationAxis = rotationAxis / theta;
+    rotationAxis = rotationAxis / -theta;
     t_c_cb = t_c_cb / scalingFactor;
     matrix_float4x4 rotationMatrix = matrix4x4_rotation(
         theta, rotationAxis.at<double>(0), rotationAxis.at<double>(1),
@@ -170,7 +170,7 @@ private:
     cv::Mat image(imgSize.height, imgSize.width, CV_8UC4, imageData.data());
 
     // Converting the image from BGR to BGRA in order to overlay the images
-    cv::cvtColor(videoFrame, videoFrame, cv::COLOR_BGR2BGRA);
+    cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
 
     // Overlay images
     cv::Mat dst;
