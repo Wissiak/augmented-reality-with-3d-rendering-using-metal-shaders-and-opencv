@@ -1,8 +1,3 @@
-//
-//  mesh.cpp
-//  Metal-Tutorial
-//
-
 #include "mesh.hpp"
 
 #include <iostream>

@@ -8,46 +8,6 @@
 #include <QuartzCore/QuartzCore.hpp>
 #include <iostream>
 
-/*
-MTLEngine() {
-
-    _mDevice = device;
-
-    NS::Error *error = nullptr;
-
-    // Load the shader files with a .metal file extension in the project
-    NS::String* filePath = NS::String::string("./add.metallib",
-NS::UTF8StringEncoding); MTL::Library *defaultLibrary =
-_mDevice->newLibrary(filePath, &error);
-
-    assert(defaultLibrary != nullptr);
-
-
-    auto str = NS::String::string("add_arrays", NS::ASCIIStringEncoding);
-    MTL::Function *addFunction = defaultLibrary->newFunction(str);
-    defaultLibrary->release();
-
-    assert(addFunction != nullptr);
-
-    // Create a compute pipeline state object.
-    _mAddFunctionPSO = _mDevice->newComputePipelineState(addFunction, &error);
-    addFunction->release();
-
-    assert(_mAddFunctionPSO != nullptr);
-
-    _mCommandQueue = _mDevice->newCommandQueue();
-
-    assert(_mCommandQueue != nullptr);
-
-    // Allocate three buffers to hold our initial data and the result.
-    _mBufferA = _mDevice->newBuffer(bufferSize, MTL::ResourceStorageModeShared);
-    _mBufferB = _mDevice->newBuffer(bufferSize, MTL::ResourceStorageModeShared);
-    _mBufferResult = _mDevice->newBuffer(bufferSize,
-MTL::ResourceStorageModeShared);
-
-    prepareData();
-}*/
-
 void MTLEngine::init(int width, int height) {
   initDevice();
 
@@ -139,13 +99,16 @@ void MTLEngine::updateRenderPassDescriptor() {
   renderPassDescriptor->depthAttachment()->setTexture(depthTexture);
 }
 
-void MTLEngine::sendRenderCommand(float3 position, float pitch, float yaw, matrix_float4x4 rotationMatrix, matrix_float4x4 modelMatrix) {
+void MTLEngine::sendRenderCommand(float3 position, float pitch, float yaw,
+                                  matrix_float4x4 rotationMatrix,
+                                  matrix_float4x4 modelMatrix) {
   metalCommandBuffer = metalCommandQueue->commandBuffer();
 
   updateRenderPassDescriptor();
   MTL::RenderCommandEncoder *renderCommandEncoder =
       metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
-  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw, rotationMatrix, modelMatrix);
+  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw,
+                      rotationMatrix, modelMatrix);
   renderCommandEncoder->endEncoding();
 
   metalCommandBuffer->presentDrawable(metalDrawable);
@@ -171,7 +134,9 @@ simd::float4x4 lookAt(const simd::float3 eye, const simd::float3 center,
 }
 
 void MTLEngine::encodeRenderCommand(
-    MTL::RenderCommandEncoder *renderCommandEncoder, float3 position, float pitch, float yaw, matrix_float4x4 rotationMatrix, matrix_float4x4 modelMatrix) {
+    MTL::RenderCommandEncoder *renderCommandEncoder, float3 position,
+    float pitch, float yaw, matrix_float4x4 rotationMatrix,
+    matrix_float4x4 modelMatrix) {
   renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
   renderCommandEncoder->setCullMode(MTL::CullModeBack);
   // If you want to render in wire-frame mode, you can uncomment this line!
@@ -196,8 +161,6 @@ void MTLEngine::encodeRenderCommand(
   MTL::SamplerState *samplerState =
       metalDevice->newSamplerState(samplerDescriptor);
 
-  float3 up = make_float3(0.0f, 1.0f, 0.0f);
-
   float3 front;
   front.x = cos(radians(yaw)) * cos(radians(pitch));
   front.y = sin(radians(pitch));
@@ -207,8 +170,8 @@ void MTLEngine::encodeRenderCommand(
   float3 right = normalize(cross(front, up));
   up = normalize(cross(right, front));
 
-  matrix_float4x4 viewMatrix =
-      lookAt(position, position + front, up);
+  matrix_float4x4 viewMatrix = lookAt(position, position + front, up);
+
   for (Mesh *mesh : model->meshes) {
     renderCommandEncoder->setVertexBuffer(mesh->vertexBuffer, 0, 0);
     renderCommandEncoder->setVertexBytes(&modelMatrix, sizeof(modelMatrix), 1);
@@ -229,9 +192,11 @@ void MTLEngine::encodeRenderCommand(
   }
 }
 
-CA::MetalDrawable *MTLEngine::run(float3 position, float pitch, float yaw, matrix_float4x4 rotationMatrix, matrix_float4x4 modelMatrix) {
-  sendRenderCommand(position, pitch, yaw, rotationMatrix, modelMatrix);
+CA::MetalDrawable *MTLEngine::run(float3 position, float pitch, float yaw,
+                                  matrix_float4x4 rotationMatrix,
+                                  matrix_float4x4 modelMatrix) {
   metalDrawable = metalLayer->nextDrawable();
+  sendRenderCommand(position, pitch, yaw, rotationMatrix, modelMatrix);
 
   /*MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
   desc->setTextureType(MTL::TextureType::TextureType2D);

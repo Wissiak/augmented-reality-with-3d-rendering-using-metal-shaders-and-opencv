@@ -18,7 +18,7 @@ class ARWebcam {
 
 public:
   ARWebcam(MTLEngine mEngine, cv::Size imgSize) {
-    detector = cv::SiftFeatureDetector::create(1000, 4, 0.001, 20, 1.5);
+    detector = cv::SiftFeatureDetector::create(3000, 8, 0.001, 20, 1.5);
     detector->detectAndCompute(referenceImage, cv::noArray(),
                                referenceKeypoints, referenceDescriptors);
     matcher = cv::BFMatcher::create(cv::NORM_L2, true);
@@ -98,9 +98,6 @@ public:
             imgSize, transformedCorners, corners, R_c_b, t_c_cb, K_c);
         if (success) {
           try {
-            // cv::Rodrigues(R_c_b)
-            // t_c_b
-            // yaw = 90
             startPipeline(engine, videoFrame, R_c_b, t_c_cb);
           } catch (const std::exception &ex) {
             std::cerr << "Render Pipeline error: " << ex.what() << std::endl;
@@ -131,6 +128,7 @@ private:
   cv::Ptr<cv::BFMatcher> matcher;
   std::vector<cv::Point2f> corners;
   bool const showMatches = false;
+  int const scalingFactor = 10;
   cv::Size imgSize;
 
   MTLEngine engine;
@@ -144,21 +142,14 @@ private:
   void startPipeline(MTLEngine engine, cv::Mat videoFrame, cv::Mat R_c_b,
                      cv::Mat t_c_cb) {
     float3 position = make_float3(0, 0, 0);
-    float yaw = 90;  // rand() % 20 + -110;
-    float pitch = 0; // rand() % 20 + -30;
+    float yaw = 90;
+    float pitch = 0;
 
     cv::Mat rotationAxis;
     cv::Rodrigues(R_c_b, rotationAxis);
     double theta = cv::norm(rotationAxis);
-    std::cout << "theta: " << theta << std::endl;
-    std::cout << "rotationAxis: " << rotationAxis.at<double>(0) << ", "
-              << rotationAxis.at<double>(1) << ", "
-              << rotationAxis.at<double>(2) << std::endl;
-    std::cout << "t_c_cb: " << t_c_cb.at<double>(0) << ", "
-              << t_c_cb.at<double>(1) << ", " << t_c_cb.at<double>(2)
-              << std::endl;
-    std::cout << "yaw: " << yaw << std::endl;
-    std::cout << "pitch: " << pitch << std::endl;
+    rotationAxis = rotationAxis / theta;
+    t_c_cb = t_c_cb / scalingFactor;
     matrix_float4x4 rotationMatrix = matrix4x4_rotation(
         theta, rotationAxis.at<double>(0), rotationAxis.at<double>(1),
         rotationAxis.at<double>(2));
@@ -183,7 +174,7 @@ private:
 
     // Overlay images
     cv::Mat dst;
-    cv::addWeighted(image, 1, videoFrame, 0, 0, dst);
+    cv::addWeighted(videoFrame, 1, image, 1, 0, dst);
 
     cv::imshow("AR Video Output", dst);
   }
@@ -276,11 +267,11 @@ private:
                                        const std::vector<cv::Point2f> &x_u,
                                        cv::Mat &R_c_b, cv::Mat &t_c_cb,
                                        cv::Mat &K_c) -> bool {
-    cv::Point2f x_c_center(shape.width / 2.0, shape.height / 2.0);
+    cv::Point2f x_d_center(shape.width / 2.0, shape.height / 2.0);
 
     // Assuming you have a function homographyFrom4PointCorrespondences already
     // implemented
-    std::vector<cv::Point2f> sub(4, x_c_center);
+    std::vector<cv::Point2f> sub(4, x_d_center);
     cv::subtract(x_d, sub, x_d);
     cv::Mat cH_c_b = homographyFrom4PointCorrespondences(x_d, x_u);
 
@@ -293,7 +284,7 @@ private:
       return false;
     }
 
-    K_c = (cv::Mat_<double>(3, 3) << f, 0, x_c_center.x, 0, f, x_c_center.y, 0,
+    K_c = (cv::Mat_<double>(3, 3) << f, 0, x_d_center.x, 0, f, x_d_center.y, 0,
            0, 1);
     return true;
   }
