@@ -16,11 +16,12 @@ find_library(APPLE_FWK_QUARTZ_CORE QuartzCore REQUIRED)
 find_library(APPLE_FWK_METAL Metal REQUIRED)
 
 add_library("RendererLib"
-    "mesh.cpp"
-    "TextureArray.cpp"
-    "model.cpp"
-    "MetalEngine.cpp"
-    "AAPLMathUtilities.cpp"
+  "ARWebcam.cpp"
+  "mesh.cpp"
+  "TextureArray.cpp"
+  "model.cpp"
+  "MetalEngine.cpp"
+  "AAPLMathUtilities.cpp"
 )
 add_library(stb "stb/stb_image.cpp")
 

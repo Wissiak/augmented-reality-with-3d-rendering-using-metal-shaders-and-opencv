@@ -12,9 +12,9 @@
 
 class MTLEngine {
 public:
-void init(int width, int height);
   CA::MetalDrawable *run(float3 position, float pitch, float yaw,
                          matrix_float4x4 modelMatrix);
+  void init(int width, int height);
   void cleanup();
 
 private:
