@@ -2,7 +2,7 @@
 
 #include <simd/simd.h>
 
-#include "AAPLMathUtilities.h"
+#include "built-libs/aapl/AAPLMathUtilities.h"
 #include "mesh.hpp"
 #include "model.hpp"
 #include <QuartzCore/CAMetalLayer.h>
