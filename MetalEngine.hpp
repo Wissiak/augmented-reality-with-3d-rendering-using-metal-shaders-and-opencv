@@ -12,9 +12,8 @@
 
 class MTLEngine {
 public:
-  void init(int width, int height);
+void init(int width, int height);
   CA::MetalDrawable *run(float3 position, float pitch, float yaw,
-                         matrix_float4x4 rotationMatrix,
                          matrix_float4x4 modelMatrix);
   void cleanup();
 
@@ -33,11 +32,9 @@ private:
 
   void draw();
   void sendRenderCommand(float3 position, float pitch, float yaw,
-                         matrix_float4x4 rotationMatrix,
                          matrix_float4x4 modelMatrix);
   void encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEncoder,
                            float3 position, float pitch, float yaw,
-                           matrix_float4x4 rotationMatrix,
                            matrix_float4x4 modelMatrix);
 
   MTL::Device *metalDevice;

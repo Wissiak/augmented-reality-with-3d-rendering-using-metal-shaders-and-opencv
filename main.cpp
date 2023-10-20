@@ -23,7 +23,7 @@ public:
                                referenceKeypoints, referenceDescriptors);
     matcher = cv::BFMatcher::create(cv::NORM_L2, true);
 
-    engine = mEngine;
+engine = mEngine;
 
     unsigned height = referenceImage.rows;
     unsigned width = referenceImage.cols;
@@ -119,7 +119,7 @@ public:
   }
 
 private:
-  const cv::Mat referenceImage = cv::imread("./assets/book1-reference.png");
+  const cv::Mat referenceImage = cv::imread("./assets/private/bfs-reference.jpg");
 
   std::vector<cv::KeyPoint> referenceKeypoints;
 
@@ -148,7 +148,7 @@ private:
     cv::Mat rotationAxis;
     cv::Rodrigues(R_c_b, rotationAxis);
     double theta = cv::norm(rotationAxis);
-    rotationAxis = rotationAxis / -theta;
+    rotationAxis = -1 * rotationAxis / theta;
     t_c_cb = t_c_cb / scalingFactor;
     matrix_float4x4 rotationMatrix = matrix4x4_rotation(
         theta, rotationAxis.at<double>(0), rotationAxis.at<double>(1),
@@ -159,7 +159,7 @@ private:
         rotationMatrix;
 
     CA::MetalDrawable *drawable =
-        engine.run(position, pitch, yaw, rotationMatrix, modelMatrix);
+        engine.run(position, pitch, yaw, modelMatrix);
     auto texture = drawable->texture();
 
     std::vector<uint8_t> imageData(imgSize.width * imgSize.height * 4);

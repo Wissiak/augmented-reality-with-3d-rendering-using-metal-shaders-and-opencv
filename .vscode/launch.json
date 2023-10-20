@@ -18,5 +18,8 @@
             "MIMode": "lldb",
         }
 
-    ]
+    ],
+    "cmake.debugConfig": {
+        "cwd": "${workspaceFolder}"
+    },
 }

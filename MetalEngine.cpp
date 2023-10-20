@@ -100,15 +100,13 @@ void MTLEngine::updateRenderPassDescriptor() {
 }
 
 void MTLEngine::sendRenderCommand(float3 position, float pitch, float yaw,
-                                  matrix_float4x4 rotationMatrix,
                                   matrix_float4x4 modelMatrix) {
   metalCommandBuffer = metalCommandQueue->commandBuffer();
 
   updateRenderPassDescriptor();
   MTL::RenderCommandEncoder *renderCommandEncoder =
       metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
-  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw,
-                      rotationMatrix, modelMatrix);
+  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw, modelMatrix);
   renderCommandEncoder->endEncoding();
 
   metalCommandBuffer->presentDrawable(metalDrawable);
@@ -135,8 +133,7 @@ simd::float4x4 lookAt(const simd::float3 eye, const simd::float3 center,
 
 void MTLEngine::encodeRenderCommand(
     MTL::RenderCommandEncoder *renderCommandEncoder, float3 position,
-    float pitch, float yaw, matrix_float4x4 rotationMatrix,
-    matrix_float4x4 modelMatrix) {
+    float pitch, float yaw, matrix_float4x4 modelMatrix) {
   renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
   renderCommandEncoder->setCullMode(MTL::CullModeBack);
   // If you want to render in wire-frame mode, you can uncomment this line!
@@ -193,34 +190,10 @@ void MTLEngine::encodeRenderCommand(
 }
 
 CA::MetalDrawable *MTLEngine::run(float3 position, float pitch, float yaw,
-                                  matrix_float4x4 rotationMatrix,
                                   matrix_float4x4 modelMatrix) {
   metalDrawable = metalLayer->nextDrawable();
-  sendRenderCommand(position, pitch, yaw, rotationMatrix, modelMatrix);
+  sendRenderCommand(position, pitch, yaw, modelMatrix);
 
-  /*MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
-  desc->setTextureType(MTL::TextureType::TextureType2D);
-  desc->setPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm);
-  desc->setWidth(drawable->texture()->width());
-  desc->setHeight(drawable->texture()->height());
-
-  MTL::Texture* texture = metalDevice->newTexture(desc);
-  MTL::RenderPassDescriptor *renderPassDesc =
-  MTL::RenderPassDescriptor::alloc()->init();
-  MTL::RenderPassColorAttachmentDescriptor *colorAttachment =
-      renderPassDescriptor->colorAttachments()->object(0);
-
-  colorAttachment->setTexture(texture);
-  colorAttachment->setLoadAction(MTL::LoadAction::LoadActionClear);
-  colorAttachment->setClearColor({0.0, 0.0, 0.0, 1.0});
-
-  MTL::CommandBuffer* commandBuffer = metalCommandQueue->commandBuffer();
-  MTL::RenderCommandEncoder* encoder =
-      commandBuffer->renderCommandEncoder(renderPassDesc);
-  // Your rendering commands here
-  encoder->endEncoding();
-  commandBuffer->presentDrawable(drawable);
-  commandBuffer->commit();*/
   return metalDrawable;
 }
 
