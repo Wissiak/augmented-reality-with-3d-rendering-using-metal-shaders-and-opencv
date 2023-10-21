@@ -34,7 +34,6 @@ private:
   int const scalingFactor = 5;
   float const yaw = 90;
   float const pitch = 0;
-  float3 const position = make_float3(0, 0, 0);
   cv::Size imgSize;
 
   MTLEngine engine;

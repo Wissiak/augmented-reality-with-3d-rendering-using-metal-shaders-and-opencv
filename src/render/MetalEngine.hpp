@@ -12,7 +12,7 @@
 
 class MTLEngine {
 public:
-  CA::MetalDrawable *run(float3 position, float pitch, float yaw,
+  CA::MetalDrawable *run(simd_float4 lightPosition, float pitch, float yaw,
                          matrix_float4x4 modelMatrix);
   void init(int width, int height);
   void cleanup();
@@ -31,18 +31,24 @@ private:
   void updateRenderPassDescriptor();
 
   void draw();
-  void sendRenderCommand(float3 position, float pitch, float yaw,
+  void sendRenderCommand(simd_float4 lightPosition, float pitch, float yaw,
                          matrix_float4x4 modelMatrix);
   void encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEncoder,
-                           float3 position, float pitch, float yaw,
+                           simd_float4 lightPosition, float pitch, float yaw,
                            matrix_float4x4 modelMatrix);
 
   MTL::Device *metalDevice;
   CA::MetalLayer *metalLayer;
   CA::MetalDrawable *metalDrawable;
-  bool windowResizeFlag = false;
-  int newWidth, newHeight;
-  float3 up = make_float3(0.0f, -1.0f, 0.0f);
+
+  float fov = 45.0f * (M_PI / 180.0f);
+  float nearZ = 0.1f;
+  float farZ = 10000.0f;
+
+  float3 position = make_float3(0, 0, 0);
+  float3 up = make_float3(0, -1, 0);
+  float3 front = make_float3(0, 0, 1);
+  simd_float4 lightColor = simd_make_float4(1.0, 1.0, 1.0, 0.5);
 
   NS::Error *error = nullptr;
   MTL::Library *metalDefaultLibrary;

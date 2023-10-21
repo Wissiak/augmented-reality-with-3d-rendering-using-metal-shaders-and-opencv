@@ -1,5 +1,6 @@
 #include "ARWebcam.hpp"
 #include "opencv2/core.hpp"
+#include <simd/vector_make.h>
 
 ARWebcam::ARWebcam(MTLEngine mEngine, cv::Size imgSize) {
   detector = cv::SiftFeatureDetector::create(3000, 8, 0.001, 20, 1.5);
@@ -101,22 +102,35 @@ auto ARWebcam::video_in(cv::VideoCapture cap) -> void {
   cap.release();
 }
 
-auto ARWebcam::startPipeline(cv::Mat &videoFrame,
-                             cv::Mat &R_c_b, cv::Mat &t_c_cb) -> void {
+auto ARWebcam::startPipeline(cv::Mat &videoFrame, cv::Mat &R_c_b,
+                             cv::Mat &t_c_cb) -> void {
   cv::Mat rotationAxis;
   cv::Rodrigues(R_c_b, rotationAxis);
   double theta = cv::norm(rotationAxis);
   rotationAxis = -1 * rotationAxis / theta;
   t_c_cb = t_c_cb / scalingFactor;
 
-  auto translationMatrix = matrix4x4_translation(
-      t_c_cb.at<double>(0), t_c_cb.at<double>(1), t_c_cb.at<double>(2));
+  double x = t_c_cb.at<double>(0);
+  double y = t_c_cb.at<double>(1);
+  double z = t_c_cb.at<double>(2);
+  float3 t = make_float3(x, y, z);
+  auto translationMatrix = matrix4x4_translation(t.xyz);
   matrix_float4x4 rotationMatrix = matrix4x4_rotation(
       theta, rotationAxis.at<double>(0), rotationAxis.at<double>(1),
       rotationAxis.at<double>(2));
   matrix_float4x4 modelMatrix = translationMatrix * rotationMatrix;
 
-  CA::MetalDrawable *drawable = engine.run(position, pitch, yaw, modelMatrix);
+  float3 viewDir = normalize(t);
+  float3 factor = t.xyz / viewDir.xyz;
+  factor.x -= 100;
+  factor.y += 100;
+  factor.z -= 20;
+
+  simd_float4 lightPosition = simd_make_float4(
+      viewDir.x * factor.x, viewDir.y * factor.y, viewDir.z * factor.z, 1);
+
+  CA::MetalDrawable *drawable =
+      engine.run(lightPosition, pitch, yaw, modelMatrix);
   auto texture = drawable->texture();
 
   std::vector<uint8_t> imageData(imgSize.width * imgSize.height * 4);
@@ -229,6 +243,11 @@ auto ARWebcam::findPoseTransformationParamsNew(
   std::vector<cv::Point2f> sub(4, x_d_center);
   cv::subtract(x_d, sub, x_d);
   cv::Mat cH_c_b = homographyFrom4PointCorrespondences(x_d, x_u);
+
+  cv::Mat nanMask = cv::Mat(cH_c_b != cH_c_b);
+  if (cv::countNonZero(nanMask) > 0) {
+    return false;
+  }
 
   double f = focalLength(cH_c_b);
 

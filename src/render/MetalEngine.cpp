@@ -61,7 +61,7 @@ void MTLEngine::createRenderPipeline() {
   MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer->pixelFormat();
   renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(
       pixelFormat);
-  renderPipelineDescriptor->setSampleCount(4);
+  renderPipelineDescriptor->setSampleCount(sampleCount);
   renderPipelineDescriptor->setLabel(
       NS::String::string("Model Render Pipeline", NS::ASCIIStringEncoding));
   renderPipelineDescriptor->setDepthAttachmentPixelFormat(
@@ -99,14 +99,14 @@ void MTLEngine::updateRenderPassDescriptor() {
   renderPassDescriptor->depthAttachment()->setTexture(depthTexture);
 }
 
-void MTLEngine::sendRenderCommand(float3 position, float pitch, float yaw,
+void MTLEngine::sendRenderCommand(simd_float4 lightPosition, float pitch, float yaw,
                                   matrix_float4x4 modelMatrix) {
   metalCommandBuffer = metalCommandQueue->commandBuffer();
 
   updateRenderPassDescriptor();
   MTL::RenderCommandEncoder *renderCommandEncoder =
       metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
-  encodeRenderCommand(renderCommandEncoder, position, pitch, yaw, modelMatrix);
+  encodeRenderCommand(renderCommandEncoder, lightPosition, pitch, yaw, modelMatrix);
   renderCommandEncoder->endEncoding();
 
   metalCommandBuffer->presentDrawable(metalDrawable);
@@ -132,7 +132,7 @@ simd::float4x4 lookAt(const simd::float3 eye, const simd::float3 center,
 }
 
 void MTLEngine::encodeRenderCommand(
-    MTL::RenderCommandEncoder *renderCommandEncoder, float3 position,
+    MTL::RenderCommandEncoder *renderCommandEncoder, simd_float4 lightPosition,
     float pitch, float yaw, matrix_float4x4 modelMatrix) {
   renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
   renderCommandEncoder->setCullMode(MTL::CullModeBack);
@@ -145,9 +145,7 @@ void MTLEngine::encodeRenderCommand(
   // otherwise the image will look stretched.
   float aspectRatio = (metalDrawable->layer()->drawableSize().width /
                        metalDrawable->layer()->drawableSize().height);
-  float fov = 45.0f * (M_PI / 180.0f);
-  float nearZ = 0.1f;
-  float farZ = 10000.0f;
+  
   matrix_float4x4 perspectiveMatrix =
       matrix_perspective_right_hand(fov, aspectRatio, nearZ, farZ);
   MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
@@ -158,15 +156,6 @@ void MTLEngine::encodeRenderCommand(
   MTL::SamplerState *samplerState =
       metalDevice->newSamplerState(samplerDescriptor);
 
-  float3 front;
-  front.x = cos(radians(yaw)) * cos(radians(pitch));
-  front.y = sin(radians(pitch));
-  front.z = sin(radians(yaw)) * cos(radians(pitch));
-  front = normalize(front);
-  // also re-calculate the Right and Up vector
-  float3 right = normalize(cross(front, up));
-  up = normalize(cross(right, front));
-
   matrix_float4x4 viewMatrix = lookAt(position, position + front, up);
 
   for (Mesh *mesh : model->meshes) {
@@ -175,13 +164,15 @@ void MTLEngine::encodeRenderCommand(
     renderCommandEncoder->setVertexBytes(&viewMatrix, sizeof(viewMatrix), 2);
     renderCommandEncoder->setVertexBytes(&perspectiveMatrix,
                                          sizeof(perspectiveMatrix), 3);
-    renderCommandEncoder->setFragmentBytes(&position, sizeof(position), 0);
-    renderCommandEncoder->setFragmentTexture(model->textures->textureArray, 1);
+        renderCommandEncoder->setFragmentBytes(&lightColor, sizeof(lightColor), 0);
+        renderCommandEncoder->setFragmentBytes(&lightPosition, sizeof(lightPosition), 1);
+    renderCommandEncoder->setFragmentBytes(&position, sizeof(position), 2);
+    renderCommandEncoder->setFragmentTexture(model->textures->textureArray, 3);
     renderCommandEncoder->setFragmentBuffer(model->textures->textureInfosBuffer,
-                                            0, 2);
+                                            0, 4);
     renderCommandEncoder->setFragmentBytes(&modelMatrix, sizeof(modelMatrix),
-                                           3);
-    renderCommandEncoder->setFragmentSamplerState(samplerState, 4);
+                                           5);
+    renderCommandEncoder->setFragmentSamplerState(samplerState, 6);
 
     renderCommandEncoder->drawIndexedPrimitives(typeTriangle, mesh->indexCount,
                                                 MTL::IndexTypeUInt32,
@@ -189,10 +180,10 @@ void MTLEngine::encodeRenderCommand(
   }
 }
 
-CA::MetalDrawable *MTLEngine::run(float3 position, float pitch, float yaw,
+CA::MetalDrawable *MTLEngine::run(simd_float4 lightPosition, float pitch, float yaw,
                                   matrix_float4x4 modelMatrix) {
   metalDrawable = metalLayer->nextDrawable();
-  sendRenderCommand(position, pitch, yaw, modelMatrix);
+  sendRenderCommand(lightPosition, pitch, yaw, modelMatrix);
 
   return metalDrawable;
 }
