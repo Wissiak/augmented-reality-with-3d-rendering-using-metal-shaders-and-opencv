@@ -21,8 +21,7 @@ public:
   auto video_in(cv::VideoCapture cap) -> void;
 
 private:
-  const cv::Mat referenceImage =
-      cv::imread("./assets/private/bfs-reference.jpg");
+  const cv::Mat referenceImage = cv::imread("./assets/book1-reference.png");
 
   std::vector<cv::KeyPoint> referenceKeypoints;
 
@@ -38,14 +37,18 @@ private:
 
   MTLEngine engine;
 
+  int const rotations = 3;
+  int const steps_per_rotation = 50;
+  int const delta_per_rotation = 6;
+
   MTL::Region region;
   NS::UInteger bytesPerRow;
   NS::UInteger bytesPerImage = 0;
   NS::UInteger level = 0;
   NS::UInteger slice = 0;
 
-  auto startPipeline(cv::Mat &videoFrame, cv::Mat &R_c_b,
-                     cv::Mat &t_c_cb) -> void;
+  auto startPipeline(cv::Mat &videoFrame, cv::Mat &R_c_b, cv::Mat &t_c_cb)
+      -> void;
 
   auto focalLength(const cv::Mat &H_c_b) -> double;
 
@@ -59,6 +62,14 @@ private:
   auto findPoseTransformationParamsNew(const cv::Size &shape,
                                        const std::vector<cv::Point2f> &x_d,
                                        const std::vector<cv::Point2f> &x_u,
-                                       cv::Mat &R_c_b, cv::Mat &t_c_cb,
-                                       cv::Mat &K_c) -> bool;
+                                       cv::Mat &R_c_b, cv::Mat &t_c_cb) -> bool;
+
+  auto recoverRigidBodyMotionAndFocalLengths(const cv::Mat &H_c_b,
+                                             cv::Mat &R_c_b, cv::Mat &t_c_cb,
+                                             double &fx, double &fy) -> void;
+
+  auto findPoseTransformationParamsEngineeringMethod(const cv::Size &shape,
+                                    const std::vector<cv::Point2f> &x_d,
+                                    const std::vector<cv::Point2f> &x_u,
+                                    cv::Mat &R_c_b, cv::Mat &t_c_cb) -> bool;
 };

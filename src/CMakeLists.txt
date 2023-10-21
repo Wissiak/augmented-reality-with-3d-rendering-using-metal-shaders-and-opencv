@@ -37,16 +37,18 @@ target_link_libraries(augmented_reality_on_webcam ${OpenCV_LIBS})
 
 # Download and install assimp
 include(FetchContent)
-set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/libs CACHE PATH "Missing description." FORCE)
-FetchContent_Declare(assimp
-GIT_REPOSITORY https://github.com/assimp/assimp.git
-GIT_TAG master)
+set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/libs/assimp CACHE PATH "Missing description." FORCE)
+FetchContent_Declare(
+  assimp
+  GIT_REPOSITORY https://github.com/assimp/assimp.git
+  GIT_TAG master
+)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(assimp)
-target_include_directories("RendererLib" PRIVATE libs/assimp-src/include)
+target_include_directories("RendererLib" PRIVATE libs/assimp/assimp-src/include)
 target_link_libraries("RendererLib" assimp)
 
 # Link stb and metal for RendererLib

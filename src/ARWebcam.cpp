@@ -2,6 +2,105 @@
 #include "opencv2/core.hpp"
 #include <simd/vector_make.h>
 
+auto ARWebcam::findPoseTransformationParamsEngineeringMethod(
+    const cv::Size &shape, const std::vector<cv::Point2f> &x_d,
+    const std::vector<cv::Point2f> &x_u, cv::Mat &R_c_b, cv::Mat &t_c_cb) -> bool {
+
+  cv::Point2f x_d_center(shape.width / 2.0, shape.height / 2.0);
+
+  std::vector<double> ratio;
+  std::vector<cv::Mat> solution;
+  std::vector<double> angle;
+
+  for (int iter = 0; iter < rotations * steps_per_rotation; ++iter) {
+    double alpha = iter * 2 * CV_PI / steps_per_rotation;
+    double dr =
+        static_cast<double>(iter) / steps_per_rotation * delta_per_rotation;
+    double dx = dr * cos(alpha);
+    double dy = dr * sin(alpha);
+    std::vector<cv::Point2f> x_ds = x_d;
+    for (cv::Point2f &point : x_ds) {
+      point.x += dx;
+      point.y += dy;
+    }
+    cv::Mat tmp;
+    std::vector<cv::Point2f> sub(4, x_d_center);
+    cv::subtract(x_ds, sub, tmp);
+    cv::Mat cH_c_b = homographyFrom4PointCorrespondences(tmp, x_u);
+
+    cv::Mat R_c_b, t_c_cb;
+    double fx, fy;
+    // Call your recoverRigidBodyMotionAndFocalLengths function
+    recoverRigidBodyMotionAndFocalLengths(cH_c_b, R_c_b, t_c_cb, fx, fy);
+
+    if (!std::isnan(fx)) {
+      ratio.push_back(std::min(fx, fy) / std::max(fx, fy));
+      angle.push_back(alpha);
+      solution.push_back(R_c_b);
+      solution.push_back(t_c_cb);
+    }
+  }
+
+  if (ratio.empty()) {
+    std::cout << "Could not find a Rotation Matrix and Transformation Vector"
+              << std::endl;
+    return false;
+  }
+
+  // Identify the most plausible solution
+  double maxRatio = ratio[0];
+  int idx = 0;
+  for (size_t i = 1; i < ratio.size(); ++i) {
+    if (ratio[i] > maxRatio) {
+      maxRatio = ratio[i];
+      idx = i;
+    }
+  }
+
+  R_c_b = solution[idx * 3];      // Extract R_c_b
+  t_c_cb = solution[idx * 3 + 1]; // Extract t_c_cb
+  return true;
+}
+
+auto ARWebcam::recoverRigidBodyMotionAndFocalLengths(const cv::Mat &H_c_b,
+                                                     cv::Mat &R_c_b,
+                                                     cv::Mat &t_c_cb,
+                                                     double &fx, double &fy)
+    -> void {
+  cv::Mat a = H_c_b;
+
+  cv::Mat Ma =
+      (cv::Mat_<double>(3, 3) << a.at<double>(0, 0) * a.at<double>(0, 0),
+       a.at<double>(1, 0) * a.at<double>(1, 0),
+       a.at<double>(2, 0) * a.at<double>(2, 0),
+       a.at<double>(0, 1) * a.at<double>(0, 1),
+       a.at<double>(1, 1) * a.at<double>(1, 1),
+       a.at<double>(2, 1) * a.at<double>(2, 1),
+       a.at<double>(0, 0) * a.at<double>(0, 1),
+       a.at<double>(1, 0) * a.at<double>(1, 1),
+       a.at<double>(2, 0) * a.at<double>(2, 1));
+
+  cv::Mat y = (cv::Mat_<double>(3, 1) << 1, 1, 0);
+  cv::Mat diags =cv::Mat::diag( Ma.inv() * y);
+
+  std::cout << diags << std::endl;
+
+  cv::sqrt(diags, diags);
+
+  cv::Mat B = diags * H_c_b;
+  cv::Mat rx = B.col(0);
+  cv::Mat ry = B.col(1);
+  cv::Mat rz = rx.cross(ry);
+  R_c_b = cv::Mat(3, 3, CV_64F);
+  rx.copyTo(R_c_b.col(0));
+  ry.copyTo(R_c_b.col(1));
+  rz.copyTo(R_c_b.col(2));
+
+  t_c_cb = B.col(2);
+  fx = diags.at<double>(2, 2) / diags.at<double>(0, 0);
+  fy = diags.at<double>(2, 2) / diags.at<double>(1, 1);
+}
+
 ARWebcam::ARWebcam(MTLEngine mEngine, cv::Size imgSize) {
   detector = cv::SiftFeatureDetector::create(3000, 8, 0.001, 20, 1.5);
   detector->detectAndCompute(referenceImage, cv::noArray(), referenceKeypoints,
@@ -75,11 +174,10 @@ auto ARWebcam::video_in(cv::VideoCapture cap) -> void {
                  transformedCorners[(i + 1) % transformedCorners.size()],
                  CV_RGB(0, 255, 0), 3, 8, 0);
       }
-      cv::Mat K_c;
       cv::Mat R_c_b;
       cv::Mat t_c_cb;
       auto success = findPoseTransformationParamsNew(
-          imgSize, transformedCorners, corners, R_c_b, t_c_cb, K_c);
+          imgSize, transformedCorners, corners, R_c_b, t_c_cb);
       if (success) {
         try {
           startPipeline(videoFrame, R_c_b, t_c_cb);
@@ -107,7 +205,7 @@ auto ARWebcam::startPipeline(cv::Mat &videoFrame, cv::Mat &R_c_b,
   cv::Mat rotationAxis;
   cv::Rodrigues(R_c_b, rotationAxis);
   double theta = cv::norm(rotationAxis);
-  rotationAxis = -1 * rotationAxis / theta;
+  rotationAxis = rotationAxis / theta;
   t_c_cb = t_c_cb / scalingFactor;
 
   double x = t_c_cb.at<double>(0);
@@ -179,7 +277,6 @@ auto ARWebcam::rigidBodyMotion(const cv::Mat &H_c_b, double f, cv::Mat &R_c_b,
   R_c_b = cv::Mat(3, 3, CV_64F);
   cv::hconcat(rx, ry, R_c_b);
   cv::hconcat(R_c_b, rz, R_c_b);
-  R_c_b = R_c_b.t();
 
   t_c_cb = V.col(2);
 }
@@ -234,8 +331,7 @@ auto ARWebcam::homographyFrom4PointCorrespondences(
 
 auto ARWebcam::findPoseTransformationParamsNew(
     const cv::Size &shape, const std::vector<cv::Point2f> &x_d,
-    const std::vector<cv::Point2f> &x_u, cv::Mat &R_c_b, cv::Mat &t_c_cb,
-    cv::Mat &K_c) -> bool {
+    const std::vector<cv::Point2f> &x_u, cv::Mat &R_c_b, cv::Mat &t_c_cb) -> bool {
   cv::Point2f x_d_center(shape.width / 2.0, shape.height / 2.0);
 
   // Assuming you have a function homographyFrom4PointCorrespondences already
@@ -258,7 +354,5 @@ auto ARWebcam::findPoseTransformationParamsNew(
     return false;
   }
 
-  K_c = (cv::Mat_<double>(3, 3) << f, 0, x_d_center.x, 0, f, x_d_center.y, 0, 0,
-         1);
   return true;
 }
