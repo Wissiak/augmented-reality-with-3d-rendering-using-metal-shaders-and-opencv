@@ -81,7 +81,7 @@ auto ARWebcam::video_in(cv::VideoCapture cap) -> void {
           imgSize, transformedCorners, corners, R_c_b, t_c_cb, K_c);
       if (success) {
         try {
-          startPipeline(engine, videoFrame, R_c_b, t_c_cb);
+          startPipeline(videoFrame, R_c_b, t_c_cb);
         } catch (const std::exception &ex) {
           std::cerr << "Render Pipeline error: " << ex.what() << std::endl;
         }
@@ -101,24 +101,20 @@ auto ARWebcam::video_in(cv::VideoCapture cap) -> void {
   cap.release();
 }
 
-auto ARWebcam::startPipeline(MTLEngine engine, cv::Mat videoFrame,
-                             cv::Mat R_c_b, cv::Mat t_c_cb) -> void {
-  float3 position = make_float3(0, 0, 0);
-  float yaw = 90;
-  float pitch = 0;
-
+auto ARWebcam::startPipeline(cv::Mat &videoFrame,
+                             cv::Mat &R_c_b, cv::Mat &t_c_cb) -> void {
   cv::Mat rotationAxis;
   cv::Rodrigues(R_c_b, rotationAxis);
   double theta = cv::norm(rotationAxis);
   rotationAxis = -1 * rotationAxis / theta;
   t_c_cb = t_c_cb / scalingFactor;
+
+  auto translationMatrix = matrix4x4_translation(
+      t_c_cb.at<double>(0), t_c_cb.at<double>(1), t_c_cb.at<double>(2));
   matrix_float4x4 rotationMatrix = matrix4x4_rotation(
       theta, rotationAxis.at<double>(0), rotationAxis.at<double>(1),
       rotationAxis.at<double>(2));
-  matrix_float4x4 modelMatrix =
-      matrix4x4_translation(t_c_cb.at<double>(0), t_c_cb.at<double>(1),
-                            t_c_cb.at<double>(2)) *
-      rotationMatrix;
+  matrix_float4x4 modelMatrix = translationMatrix * rotationMatrix;
 
   CA::MetalDrawable *drawable = engine.run(position, pitch, yaw, modelMatrix);
   auto texture = drawable->texture();

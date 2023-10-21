@@ -31,7 +31,10 @@ private:
   cv::Ptr<cv::BFMatcher> matcher;
   std::vector<cv::Point2f> corners;
   bool const showMatches = false;
-  int const scalingFactor = 10;
+  int const scalingFactor = 5;
+  float const yaw = 90;
+  float const pitch = 0;
+  float3 const position = make_float3(0, 0, 0);
   cv::Size imgSize;
 
   MTLEngine engine;
@@ -42,8 +45,8 @@ private:
   NS::UInteger level = 0;
   NS::UInteger slice = 0;
 
-  auto startPipeline(MTLEngine engine, cv::Mat videoFrame, cv::Mat R_c_b,
-                     cv::Mat t_c_cb) -> void;
+  auto startPipeline(cv::Mat &videoFrame, cv::Mat &R_c_b,
+                     cv::Mat &t_c_cb) -> void;
 
   auto focalLength(const cv::Mat &H_c_b) -> double;
 
