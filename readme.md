@@ -25,10 +25,12 @@ Basically we have three different coordinate systems which we need to take care 
 3. **3D Mesh Model**
 ![3D Mesh Coordinate Frame](assets/readme/coordinate-frame-3d-mesh.png)
 
-The 3D Mesh Model will be projected onto the reference object. In order to render the 3D Mesh Model correctly, I had to export it with the up axis being the negative Z-Axis so that it aligns with the reference object's coordinate frame.
+The 3D Mesh Model will be projected onto the reference object. In order to render the 3D Mesh Model correctly, I had to export it with the up axis being the **negative** Z-Axis so that it aligns with the reference object's coordinate frame.
+
+For all the position estimation calculations, it is assumed that the camera stands at the point (0;0;0) and the rendered 3D Mesh Object will be rendered into position relative to that.
 
 ### Rendering
-As mentioned before, the Metal Shading Language is used to control Apple Silicon GPUs. The vertices of the 3D Mesh Model are then passed to the GPU which computes the position as well as the textures. 
+As mentioned before, the Metal Shading Language is used to interact with Apple Silicon GPUs. The vertices of the 3D Mesh Model are then passed to the GPU which computes the position as well as the textures. 
 
 In order to compile updates to the `model.metal`, the shell script `compile-metal-lib.sh` in the project root can be used. All it does is to build the metal library which then can be loaded from the C++ context.
 
@@ -40,7 +42,7 @@ The 3D Rendering utilizes the GPU for performance and is based on the great tuto
 
 ## Setup
 First you need to [install OpenCV](https://docs.opencv.org/4.x/d0/db2/tutorial_macos_install.html) which you can do with homebrew. Afterwards, you have to adapt the path to OpenCV, `OpenCV_DIR`, in `src/CMakeLists.txt`.
-Afterwards, you can open the project in any IDE. I used VSCode with the "CMake Tools" extension. 
+Then you can open the project in any IDE. I used VSCode with the "CMake Tools" extension and clang 15.0.0 compiler. 
 
 If you get the following error: 
 ```

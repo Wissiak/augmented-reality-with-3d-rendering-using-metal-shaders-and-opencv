@@ -21,7 +21,7 @@ public:
   auto video_in(cv::VideoCapture cap) -> void;
 
 private:
-  const cv::Mat referenceImage = cv::imread("./assets/private/bfs-reference.jpg");
+  const cv::Mat referenceImage = cv::imread("./assets/book1-reference.png");
 
   std::vector<cv::KeyPoint> referenceKeypoints;
 
