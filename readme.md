@@ -4,6 +4,9 @@ This project showcases Augmented Reality by projecting a 3D Mesh Model onto a 2D
 This project works only on OSX devices with Apple Silicon GPUs. Also have a look at my other projects on [Augmented Reality with Python](https://github.com/Wissiak/augmented-reality-on-webcam) and [Augmented Reality on Android](https://github.com/Wissiak/augmented-reality-on-android).
 
 ## Showcase
+Here you can see the project in action. Also note the change of light exposure on change of position.
+
+https://github.com/Wissiak/Augmented-Reality-with-3D-Rendering-using-Metal-Shaders-and-OpenCV/assets/31206249/731a44ee-acf8-42a8-97f2-1043e3c6b3e4
 
 
 ## How does it work?
@@ -27,16 +30,19 @@ The 3D Mesh Model will be projected onto the reference object. In order to rende
 ### Rendering
 As mentioned before, the Metal Shading Language is used to control Apple Silicon GPUs. The vertices of the 3D Mesh Model are then passed to the GPU which computes the position as well as the textures. 
 
-In order to compile updates to the `model.metal`, the shell script `compile-metal-lib.sh` in the project root can be used. All it does is to built the metal library which then can be loaded from the C++ context.
+In order to compile updates to the `model.metal`, the shell script `compile-metal-lib.sh` in the project root can be used. All it does is to build the metal library which then can be loaded from the C++ context.
+
+Just for fun there is an artificial light at a fixed position in the scene which illuminates the rendered object depending on its position and rotation.
 
 ## Knowledge Acquisition
-The homography estimations work without prior camera calibration as provided in the course "Image Processing an Computer Vision 2" at the University of Applied Sciences in Eastern Switzerland (OST). 
+The homography estimations work without prior camera calibration as provided in the course "Image Processing and Computer Vision 2" at the University of Applied Sciences in Eastern Switzerland (OST). 
 The 3D Rendering utilizes the GPU for performance and is based on the great tutorial at https://metaltutorial.com. 
 
 ## Setup
 First you need to [install OpenCV](https://docs.opencv.org/4.x/d0/db2/tutorial_macos_install.html) which you can do with homebrew. Afterwards, you have to adapt the path to OpenCV, `OpenCV_DIR`, in `src/CMakeLists.txt`.
+Afterwards, you can open the project in any IDE. I used VSCode with the "CMake Tools" extension. 
 
-To run the project, I use VSCode with the "CMake Tools" extension. If you get the following error: 
+If you get the following error: 
 ```
 Assertion failed: (metalDefaultLibrary != nullptr), function createDefaultLibrary, file MetalEngine.cpp, line 39.
 ```
@@ -45,5 +51,5 @@ Make sure you run the project from the project root - this can be checked if the
 Current path is "<project-root>"
 ```
 
-### New Reference Object
-To register a new reference object, please refer to [Register new reference object](https://github.com/Wissiak/augmented-reality-on-webcam/tree/main#register-new-reference-object) on how to unwarp the image. Then copy the resulting image to assets/private and set the filename of the attribute `referenceImage` in `ARWebcam.hpp`.
+### New Reference Object
+To register a new reference object, please refer to [Register new reference object](https://github.com/Wissiak/augmented-reality-on-webcam/tree/main#register-new-reference-object) to unwarp the image. Then copy the resulting image to assets/private and set the filename of the attribute `referenceImage` in `ARWebcam.hpp`.
