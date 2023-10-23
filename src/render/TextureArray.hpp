@@ -1,7 +1,4 @@
-//
-//  TextureArray.hpp
-//  Metal-Tutorial
-//
+// Code from https://github.com/wmarti/MetalTutorial
 
 #pragma once
 #include <Metal/Metal.hpp>

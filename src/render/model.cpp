@@ -1,3 +1,5 @@
+// Code from https://github.com/wmarti/MetalTutorial
+
 #include "model.hpp"
 #include <iostream>
 

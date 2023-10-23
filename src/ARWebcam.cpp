@@ -2,6 +2,16 @@
 #include "opencv2/core.hpp"
 #include <simd/vector_make.h>
 
+/**
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * The code base for feature detection, feature matching, homography
+ * decomposition and object projection has been provided as course material
+ * to the course "Image Processing and Computer Vision 2" taught at OST
+ * university.
+ * @authors: Patrick Wissiak, basic material by Martin Weisenhorn
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ */
+
 auto ARWebcam::findPoseTransformationParamsEngineeringMethod(
     const cv::Size &shape, const std::vector<cv::Point2f> &x_d,
     const std::vector<cv::Point2f> &x_u, cv::Mat &R_c_b, cv::Mat &t_c_cb) -> bool {
